@@ -1,0 +1,11 @@
+POST http://localhost:3000/userVerification/
+Content-Type: application/json
+
+{
+  "username":"surya",
+  "email":"bugatha@gmail.com",
+  "age":49,
+  "location":"visakhapatnam"
+}
+
+
