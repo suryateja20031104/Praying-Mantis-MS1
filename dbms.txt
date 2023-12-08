@@ -1,0 +1,956 @@
+
+1:
+
+CREATE TABLE stu_details (
+    reg_no INT PRIMARY KEY,
+    stu_name VARCHAR(50),
+    DOB DATE,
+    address VARCHAR(100),
+    city VARCHAR(50)
+);
+
+CREATE TABLE mark_details (
+    reg_no INT PRIMARY KEY,
+    mark1 INT,
+    mark2 INT,
+    mark3 INT,
+    total INT
+);
+
+INSERT INTO stu_details (reg_no, stu_name, DOB, address, city)
+VALUES 
+    (1, 'John Doe', '1995-05-15', '123 Main St', 'New York'),
+    (2, 'Jane Smith', '1998-10-25', '456 Oak Ave', 'Los Angeles'),
+    (3, 'Bob Johnson', '2000-03-08', '789 Maple Dr', 'Chicago');
+
+
+INSERT INTO mark_details (reg_no, mark1, mark2, mark3, total)
+VALUES 
+    (1, 85, 90, 75, 250),
+    (2, 80, 75, 95, 250),
+    (3, 70, 85, 80, 235);
+
+
+CREATE TABLE student_marks (
+    total_marks INT,
+    avg_marks FLOAT
+);
+
+DELIMITER //
+CREATE TRIGGER calculate_marks_trigger AFTER INSERT ON mark_details
+FOR EACH ROW
+BEGIN
+    DECLARE total_marks INT;
+    DECLARE avg_marks FLOAT;
+
+    -- Calculate total marks
+    SET total_marks = NEW.mark1 + NEW.mark2 + NEW.mark3;
+
+    -- Calculate average marks
+    SET avg_marks = total_marks / 3;
+
+    -- Insert into student_marks table
+    INSERT INTO student_marks (total_marks, avg_marks)
+    VALUES (total_marks, avg_marks);
+END;
+//
+DELIMITER ;
+
+SELECT *
+FROM stu_details
+LIMIT 5;
+
+ SELECT COUNT(*) FROM mark_details;
+
+SELECT SUM(mark1) AS total_mark1, SUM(mark2) AS total_mark2, SUM(mark3) AS total_mark3, SUM(total) AS total_marks
+FROM mark_details;
+
+SELECT *
+FROM stu_details
+WHERE stu_name LIKE 'a%';
+
+DELIMITER //
+
+CREATE TRIGGER calculate_grade_and_insert
+AFTER INSERT ON mark_details
+FOR EACH ROW
+BEGIN
+    DECLARE total_marks INT;
+    DECLARE grade VARCHAR(10);
+
+    -- Calculate total marks
+    SET total_marks = NEW.mark1 + NEW.mark2 + NEW.mark3;
+
+    -- Determine grade
+    IF total_marks >= 240 THEN
+        SET grade = 'A+';
+    ELSEIF total_marks >= 200 THEN
+        SET grade = 'A';
+    ELSEIF total_marks >= 160 THEN
+        SET grade = 'B';
+    ELSEIF total_marks >= 120 THEN
+        SET grade = 'C';
+    ELSE
+        SET grade = 'F';
+    END IF;
+
+    -- Insert the data into stu_grades
+    INSERT INTO stu_grades (reg_no, grade)
+    VALUES (NEW.reg_no, grade);
+END;
+//
+
+DELIMITER ;
+2:
+
+CREATE TABLE emp_details (
+    emp_no INT,
+    emp_name VARCHAR(50),
+    DOB DATE,
+    address VARCHAR(100),
+    doj DATE,
+    mobile_no VARCHAR(15),
+    dept_no INT,
+    salary DECIMAL(10, 2),
+    FOREIGN KEY (dept_no) REFERENCES dept_details(dept_no)
+);
+
+CREATE TABLE dept_details (
+    dept_no INT PRIMARY KEY,
+    dept_name VARCHAR(50),
+    location VARCHAR(50)
+);
+
+ALTER TABLE emp_details
+ADD CONSTRAINT pk_emp_details PRIMARY KEY (emp_no);
+
+SELECT emp_name, salary
+FROM emp_details
+WHERE salary = (SELECT MAX(salary) FROM emp_details);
+
+-- Inner Join
+SELECT emp_details.emp_name, dept_details.dept_name
+FROM emp_details
+INNER JOIN dept_details ON emp_details.dept_no = dept_details.dept_no;
+
+-- Left Join
+SELECT emp_details.emp_name, dept_details.dept_name
+FROM emp_details
+LEFT JOIN dept_details ON emp_details.dept_no = dept_details.dept_no;
+
+-- Right Join
+SELECT emp_details.emp_name, dept_details.dept_name
+FROM emp_details
+RIGHT JOIN dept_details ON emp_details.dept_no = dept_details.dept_no;
+
+-- Full Outer Join (may not be supported in all databases)
+SELECT emp_details.emp_name, dept_details.dept_name
+FROM emp_details
+FULL OUTER JOIN dept_details ON emp_details.dept_no = dept_details.dept_no;
+
+SELECT emp_name
+FROM emp_details
+WHERE address LIKE 'a%a';
+
+DELIMITER //
+
+CREATE TRIGGER backup_deleted_employee
+AFTER DELETE ON emp_details
+FOR EACH ROW
+BEGIN
+    INSERT INTO emp_backup (emp_no, emp_name, DOB, address, doj, mobile_no, dept_no, salary)
+    VALUES (OLD.emp_no, OLD.emp_name, OLD.DOB, OLD.address, OLD.doj, OLD.mobile_no, OLD.dept_no, OLD.salary);
+END;
+//
+
+DELIMITER ;
+
+ALTER TABLE dept_details
+ADD COLUMN new_attribute1 VARCHAR(50);
+
+ALTER TABLE dept_details
+ADD COLUMN new_attribute2 VARCHAR(50);
+
+
+3:
+
+-- Creating the EMPLOYEE table
+CREATE TABLE EMPLOYEE (
+    empno INT PRIMARY KEY,
+    ename VARCHAR(50),
+    designation VARCHAR(50),
+    manager INT,
+    hiredate DATE,
+    salary DECIMAL(10, 2),
+    commission DECIMAL(10, 2),
+    deptno INT,
+    FOREIGN KEY (deptno) REFERENCES DEPARTMENT(deptno)
+);
+
+-- Creating the DEPARTMENT table
+CREATE TABLE DEPARTMENT (
+    deptno INT PRIMARY KEY,
+    dname VARCHAR(50),
+    location VARCHAR(50)
+);
+
+-- Inserting sample data into EMPLOYEE table
+INSERT INTO EMPLOYEE (empno, ename, designation, manager, hiredate, salary, commission, deptno)
+VALUES 
+    (101, 'John Smith', 'Manager', NULL, '2022-01-15', 50000.00, NULL, 1),
+    (102, 'Jane Doe', 'Salesman', 101, '2022-02-20', 30000.00, 2000.00, 1),
+    (103, 'Bob Johnson', 'Clerk', 101, '2022-03-10', 20000.00, NULL, 2),
+    (104, 'Alice Jones', 'Salesman', 101, '2022-04-05', 35000.00, 1500.00, 2),
+    (105, 'Mike Davis', 'Clerk', 101, '2022-05-12', 23000.00, NULL, 3);
+
+-- Inserting sample data into DEPARTMENT table
+INSERT INTO DEPARTMENT (deptno, dname, location)
+VALUES 
+    (1, 'Sales', 'New York'),
+    (2, 'Finance', 'Chicago'),
+    (3, 'HR', 'Los Angeles');
+
+SELECT ename
+FROM EMPLOYEE
+WHERE ename LIKE '%LA%';
+
+SELECT *
+FROM EMPLOYEE
+WHERE salary >= (SELECT AVG(salary) FROM EMPLOYEE);
+
+CREATE VIEW SALESMAN_VIEW AS
+SELECT *
+FROM EMPLOYEE
+WHERE designation = 'Salesman';
+
+4:
+-- Creating the SAILOR table
+CREATE TABLE SAILOR (
+    sid INT PRIMARY KEY,
+    sname VARCHAR(50),
+    rating INT,
+    age INT
+);
+
+-- Creating the BOATS table
+CREATE TABLE BOATS (
+    bid INT PRIMARY KEY,
+    bname VARCHAR(50),
+    colour VARCHAR(20)
+);
+
+-- Creating the RESERVES table
+CREATE TABLE RESERVES (
+    sid INT,
+    bid INT,
+    day DATE,
+    PRIMARY KEY (sid, bid, day),
+    FOREIGN KEY (sid) REFERENCES SAILOR(sid),
+    FOREIGN KEY (bid) REFERENCES BOATS(bid)
+);
+
+-- Inserting sample data into SAILOR table
+INSERT INTO SAILOR (sid, sname, rating, age)
+VALUES 
+    (101, 'John Smith', 8, 25),
+    (102, 'Jane Doe', 7, 22),
+    (103, 'Bob Johnson', 5, 28),
+    (104, 'Alice Jones', 9, 21),
+    (105, 'Mike Davis', 6, 24);
+
+-- Inserting sample data into BOATS table
+INSERT INTO BOATS (bid, bname, colour)
+VALUES 
+    (201, 'Sailboat A', 'RED'),
+    (202, 'Sailboat B', 'GREEN'),
+    (203, 'Canoe X', 'BLUE'),
+    (204, 'Yacht Z', 'RED'),
+    (205, 'Kayak Y', 'GREEN');
+
+-- Inserting sample data into RESERVES table
+INSERT INTO RESERVES (sid, bid, day)
+VALUES 
+    (101, 201, '2022-11-01'),
+    (102, 202, '2022-11-02'),
+    (103, 202, '2022-11-03'),
+    (104, 204, '2022-11-04'),
+    (105, 205, '2022-11-05');
+
+SELECT *
+FROM SAILOR
+ORDER BY rating DESC;
+
+SELECT s.sid, s.sname
+FROM SAILOR s
+JOIN RESERVES r ON s.sid = r.sid
+JOIN BOATS b ON r.bid = b.bid
+GROUP BY s.sid, s.sname
+HAVING COUNT(DISTINCT (b.colour = 'RED' and b.colour ='GREEN')) = 2;
+
+SELECT s1.sid, s1.sname
+FROM SAILOR s1
+WHERE s1.rating > ALL (SELECT s2.rating FROM SAILOR s2 WHERE s2.sid <> s1.sid);
+
+
+5:
+
+-- Creating the CUSTOMER table
+CREATE TABLE CUSTOMER (
+    custno INT PRIMARY KEY,
+    cname VARCHAR(50),
+    city VARCHAR(50)
+);
+
+-- Creating the ORDER table
+CREATE TABLE ORDER (
+    orderno INT PRIMARY KEY,
+    odate DATE,
+    custno INT,
+    ord_amt float,
+    FOREIGN KEY (custno) REFERENCES CUSTOMER(custno)
+);
+
+-- Creating the ORDER_ITEM table
+CREATE TABLE ORDER_ITEM (
+    orderno INT,
+    itemno INT,
+    quantity INT,
+    PRIMARY KEY (orderno, itemno),
+    FOREIGN KEY (orderno) REFERENCES ORDER(orderno)
+);
+
+-- Creating the ITEM table
+CREATE TABLE ITEM (
+    itemno INT PRIMARY KEY,
+    unitprice DECIMAL(10, 2)
+);
+
+-- Creating the SHIPMENT table
+CREATE TABLE SHIPMENT (
+    orderno INT,
+    warehouseno INT,
+    ship_date DATE,
+    PRIMARY KEY (orderno, warehouseno),
+    FOREIGN KEY (orderno) REFERENCES ORDER(orderno)
+);
+
+-- Creating the WAREHOUSE table
+CREATE TABLE WAREHOUSE (
+    warehouseno INT PRIMARY KEY,
+    city VARCHAR(50)
+);
+
+-- Inserting sample data (Please replace with actual data as needed)
+-- CUSTOMER
+INSERT INTO CUSTOMER (custno, cname, city)
+VALUES 
+    (101, 'John Smith', 'New York'),
+    (102, 'Jane Doe', 'Los Angeles'),
+    (103, 'Bob Johnson', 'Chicago'),
+    (104, 'Alice Jones', 'San Francisco'),
+    (105, 'Mike Davis', 'Boston');
+
+-- ORDER
+INSERT INTO ORDER (orderno, odate, custno, ord_amt)
+VALUES 
+    (201, '2022-11-01', 101, 1000.00),
+    (202, '2022-11-02', 102, 1200.00),
+    (203, '2022-11-03', 101, 800.00),
+    (204, '2022-11-04', 104, 1500.00),
+    (205, '2022-11-05', 103, 900.00);
+
+-- ORDER_ITEM
+INSERT INTO ORDER_ITEM (orderno, itemno, quantity)
+VALUES 
+    (201, 301, 2),
+    (202, 302, 3),
+    (203, 303, 1),
+    (204, 301, 2),
+    (205, 304, 1);
+
+-- ITEM
+INSERT INTO ITEM (itemno, unitprice)
+VALUES 
+    (301, 10.00),
+    (302, 15.00),
+    (303, 8.00),
+    (304, 12.00),
+    (305, 20.00);
+
+-- SHIPMENT
+INSERT INTO SHIPMENT (orderno, warehouseno, ship_date)
+VALUES 
+    (201, 401, '2022-11-03'),
+    (202, 402, '2022-11-04'),
+    (203, 403, '2022-11-05'),
+    (204, 404, '2022-11-06'),
+    (205, 405, '2022-11-07');
+
+-- WAREHOUSE
+INSERT INTO WAREHOUSE (warehouseno, city)
+VALUES 
+    (401, 'New York'),
+    (402, 'Los Angeles'),
+    (403, 'Chicago'),
+    (404, 'San Francisco'),
+    (405, 'Boston');
+
+SELECT 
+    c.cname AS custname,
+    COUNT(o.orderno) AS No_of_orders,
+    AVG(o.ord_amt) AS Avg_order_amount
+FROM 
+    CUSTOMER c
+JOIN 
+    ORDER o ON c.custno = o.custno
+GROUP BY 
+    c.cname;
+
+SELECT DISTINCT o.orderno
+FROM 
+    ORDER o
+JOIN 
+    SHIPMENT s ON o.orderno = s.orderno
+JOIN 
+    WAREHOUSE w ON s.warehouseno = w.warehouseno
+WHERE 
+    w.city = 'New York'
+GROUP BY 
+    o.orderno
+HAVING 
+    COUNT(DISTINCT w.warehouseno) = (SELECT COUNT(*) FROM WAREHOUSE WHERE city = 'New York');
+
+DELETE FROM ITEM WHERE itemno = 305;
+
+
+6:
+
+-- Create the BUS table
+CREATE TABLE BUS (
+    ROUTENO INT PRIMARY KEY,
+    SOURCE VARCHAR(50),
+    DESTINATION VARCHAR(50)
+);
+
+-- Create the PASSENGER table with the DOB constraint
+CREATE TABLE PASSENGER (
+    PID INT PRIMARY KEY,
+    PNAME VARCHAR(50),
+    DOB DATE CHECK (DOB > '2010-01-01'), -- DOB should be after 2010
+    GENDER CHAR(1)
+);
+
+-- Create the BOOK_TICKET table
+CREATE TABLE BOOK_TICKET (
+    PID INT,
+    ROUTENO INT,
+    JOURNEY_DATE DATE,
+    SEAT_NO INT,
+    FOREIGN KEY (PID) REFERENCES PASSENGER(PID),
+    FOREIGN KEY (ROUTENO) REFERENCES BUS(ROUTENO)
+);
+
+-- Populate the tables (insert sample data as needed)
+-- Example data for BUS
+INSERT INTO BUS (ROUTENO, SOURCE, DESTINATION) VALUES
+    (101, 'Bangalore', 'Chennai'),
+    (102, 'Chennai', 'Pune'),
+    (103, 'Mumbai', 'Delhi');
+
+-- Example data for PASSENGER
+INSERT INTO PASSENGER (PID, PNAME, DOB, GENDER) VALUES
+    (201, 'John Doe', '2012-05-15', 'M'),
+    (202, 'Jane Smith', '2011-08-25', 'F'),
+    (203, 'Bob Johnson', '2013-03-08', 'M'),
+    (204, 'Alice Jones', '2014-12-01', 'F'),
+    (205, 'Mike Davis', '2015-06-10', 'M');
+
+-- Example data for BOOK_TICKET
+INSERT INTO BOOK_TICKET (PID, ROUTENO, JOURNEY_DATE, SEAT_NO) VALUES
+    (201, 101, '2014-11-03', 1),
+    (202, 101, '2014-11-03', 2),
+    (203, 102, '2014-11-05', 1),
+    (204, 102, '2014-11-05', 2),
+    (205, 102, '2014-11-05', 3);
+
+-- Altering the PASSENGER table to add DOB constraint
+ALTER TABLE PASSENGER
+ADD CONSTRAINT chk_dob CHECK (DOB > '2010-01-01');
+
+SELECT PNAME
+FROM PASSENGER p
+JOIN BOOK_TICKET bt ON p.PID = bt.PID
+JOIN BUS b ON bt.ROUTENO = b.ROUTENO
+WHERE b.SOURCE = 'Bangalore' AND b.DESTINATION = 'Chennai' AND bt.JOURNEY_DATE = '2014-11-03';
+
+CREATE VIEW Chennai_To_Pune_Routes1 AS
+SELECT bt.ROUTENO, b.SOURCE, b.DESTINATION, bt.JOURNEY_DATE
+FROM BUS b
+JOIN BOOK_TICKET bt ON b.ROUTENO = bt.ROUTENO
+WHERE b.SOURCE = 'Chennai' AND b.DESTINATION = 'Pune';
+
+CREATE INDEX idx_pid ON PASSENGER (PID);
+
+7:
+
+-- Create the DRIVER table
+CREATE TABLE DRIVER (
+    DCODE INT PRIMARY KEY,
+    DNAME VARCHAR(50),
+    DOB DATE,
+    GENDER CHAR(1) CHECK (GENDER = 'M')  -- Gender is always 'male'
+);
+
+-- Create the CITY table
+CREATE TABLE CITY (
+    CCODE INT PRIMARY KEY,
+    CNAME VARCHAR(50)
+);
+
+-- Create the TRUCK table
+CREATE TABLE TRUCK (
+    TRUCKCODE INT PRIMARY KEY,
+    TTYPE CHAR(1) CHECK (TTYPE IN ('L', 'H'))  -- 'L' for Light, 'H' for Heavy
+);
+
+-- Create the DRIVE_TRUCK table
+CREATE TABLE DRIVE_TRUCK (
+    TRUCKCODE INT,
+    DCODE INT,
+    DOT DATE,
+    CCODE INT,
+    PRIMARY KEY (TRUCKCODE, DCODE, DOT),
+    FOREIGN KEY (TRUCKCODE) REFERENCES TRUCK(TRUCKCODE),
+    FOREIGN KEY (DCODE) REFERENCES DRIVER(DCODE),
+    FOREIGN KEY (CCODE) REFERENCES CITY(CCODE)
+);
+
+-- Populate the tables (insert sample data as needed)
+-- Example data for DRIVER
+INSERT INTO DRIVER (DCODE, DNAME, DOB, GENDER) VALUES
+    (101, 'John Smith', '1990-05-15', 'M'),
+    (102, 'Jane Doe', '1988-08-25', 'M'),
+    (103, 'Bob Johnson', '1995-03-08', 'M'),
+    (104, 'Alice Jones', '1992-12-01', 'M'),
+    (105, 'Mike Davis', '1993-06-10', 'M');
+
+-- Example data for CITY
+INSERT INTO CITY (CCODE, CNAME) VALUES
+    (201, 'New York'),
+    (202, 'Los Angeles'),
+    (203, 'Chicago'),
+    (204, 'San Francisco'),
+    (205, 'Boston');
+
+-- Example data for TRUCK
+INSERT INTO TRUCK (TRUCKCODE, TTYPE) VALUES
+    (301, 'L'),
+    (302, 'H'),
+    (303, 'H'),
+    (304, 'L'),
+    (305, 'H');
+
+-- Example data for DRIVE_TRUCK
+INSERT INTO DRIVE_TRUCK (TRUCKCODE, DCODE, DOT, CCODE) VALUES
+    (301, 101, '2022-11-01', 201),
+    (302, 102, '2022-11-02', 202),
+    (303, 103, '2022-11-03', 203),
+    (304, 104, '2022-11-04', 204),
+    (305, 105, '2022-11-05', 205);
+
+ALTER TABLE DRIVER
+ADD CONSTRAINT chk_dob CHECK (DOB > '2010-01-01');
+
+SELECT 
+    D.DCODE, 
+    D.DNAME, 
+    COUNT(DT.TRUCKCODE) AS Trips_Traveled
+FROM 
+    DRIVER D
+JOIN 
+    DRIVE_TRUCK DT ON D.DCODE = DT.DCODE
+GROUP BY 
+    D.DCODE, D.DNAME;
+
+
+CREATE INDEX idx_truckcode ON DRIVE_TRUCK (TRUCKCODE);
+
+CREATE VIEW Driver_City_Details AS
+SELECT D.DCODE, D.DNAME, D.DOB, D.GENDER, C.CNAME
+FROM DRIVER D
+JOIN DRIVE_TRUCK DT ON D.DCODE = DT.DCODE
+JOIN CITY C ON DT.CCODE = C.CCODE;
+
+8:
+
+-- Create the Customer table with a sequence
+CREATE TABLE Customer (
+    Custid INT PRIMARY KEY,
+    Custname VARCHAR(50),
+    Age INT,
+    phno VARCHAR(15)
+);
+
+-- Create a sequence for Custid
+CREATE SEQUENCE Customer_Sequence START WITH 1 INCREMENT BY 1;
+
+-- Create the HLoan table
+CREATE TABLE HLoan (
+    HLoanid INT PRIMARY KEY,
+    Amount DECIMAL(10, 2),
+    Custid INT,
+    FOREIGN KEY (Custid) REFERENCES Customer(Custid)
+);
+
+-- Create the VLoan table
+CREATE TABLE VLoan (
+    VLoanid INT PRIMARY KEY,
+    Amount DECIMAL(10, 2),
+    Custid INT,
+    FOREIGN KEY (Custid) REFERENCES Customer(Custid)
+);
+
+-- Populate the tables (insert sample data as needed)
+-- Example data for Customer
+-- Since we have a sequence for Custid, we won't be inserting it manually
+INSERT INTO Customer (Custname, Age, phno) VALUES
+    ('John Smith', 35, '555-555-5555'),
+    ('Jane Doe', 28, '666-666-6666'),
+    ('Bob Johnson', 42, '777-777-7777');
+
+-- Example data for HLoan
+INSERT INTO HLoan (HLoanid, Amount, Custid) VALUES
+    (101, 100000.00, 1),
+    (102, 150000.00, 2),
+    (103, 120000.00, 3);
+
+-- Example data for VLoan
+INSERT INTO VLoan (VLoanid, Amount, Custid) VALUES
+    (201, 50000.00, 1),
+    (202, 70000.00, 2),
+    (203, 60000.00, 3);
+
+SELECT COUNT(*) AS Num_Of_VLoans
+FROM VLoan
+WHERE Custid = 2;
+
+SELECT Custid, SUM(Amount) AS Total_HLoan_Amount
+FROM HLoan
+GROUP BY Custid;
+
+CREATE VIEW Customers_With_Both_Loans AS
+SELECT C.Custid, C.Custname, C.Age, C.phno
+FROM Customer C
+WHERE EXISTS (
+    SELECT 1
+    FROM HLoan HL
+    WHERE C.Custid = HL.Custid
+) AND EXISTS (
+    SELECT 1
+    FROM VLoan VL
+    WHERE C.Custid = VL.Custid
+);
+
+SELECT Custid, SUM(Amount) AS Total_HLoan_Amount
+FROM HLoan
+GROUP BY Custid;
+
+CREATE SEQUENCE Customer_Sequence
+    START WITH 1
+    INCREMENT BY 1
+    NOCACHE
+    NOCYCLE;
+
+INSERT INTO Customer (Custid, Custname, Age, phno)
+VALUES (Customer_Sequence.NEXTVAL, 'John Doe', 30, '555-555-5555');
+
+INSERT INTO Customer (Custid, Custname, Age, phno)
+VALUES (Customer_Sequence.NEXTVAL, 'Jane Smith', 25, '666-666-6666');
+
+9:
+
+CREATE TABLE book (
+    book_name VARCHAR(50),
+    author_name VARCHAR(50),
+    price DECIMAL(10, 2),
+    quantity INT
+);
+
+UPDATE book
+SET quantity = quantity * 2;
+
+SELECT book_name
+FROM book
+WHERE price > 400;
+
+SELECT author_name, book_name, price
+FROM book
+WHERE author_name LIKE 'a%';
+
+CREATE TABLE Phone_book (
+    ph_no VARCHAR(15),
+    name VARCHAR(50),
+    door_no VARCHAR(10),
+    street VARCHAR(50),
+    place VARCHAR(50)
+);
+
+SELECT price
+FROM book
+WHERE price BETWEEN 400 AND 500;
+
+DELIMITER //
+CREATE TRIGGER insert_to_another_table
+AFTER INSERT ON book
+FOR EACH ROW
+BEGIN
+    INSERT INTO another_table (col1, col2, col3)
+    VALUES (NEW.book_name, NEW.author_name, NEW.price);
+END;
+//
+DELIMITER ;
+
+
+10.
+
+-- Create the EMP table
+CREATE TABLE Emp (
+    eno INT PRIMARY KEY,
+    ename VARCHAR(50),
+    job VARCHAR(50),
+    mgr INT,
+    hiredate DATE,
+    sal INT,
+    comm INT,
+    deptno INT,
+    FOREIGN KEY (deptno) REFERENCES Dept(deptno)
+);
+
+-- Create the DEPT table
+CREATE TABLE Dept (
+    deptno INT PRIMARY KEY,
+    dname VARCHAR(50),
+    location VARCHAR(50)
+);
+
+-- Insert data into EMP table
+INSERT INTO Emp (eno, ename, job, mgr, hiredate, sal, comm, deptno) VALUES
+    (101, 'John', 'Manager', NULL, '2022-01-10', 5000, NULL, 10),
+    (102, 'Jane', 'Clerk', 101, '2022-02-15', 3000, NULL, 20),
+    (103, 'Bob', 'Analyst', 101, '2022-03-20', 4000, NULL, 30),
+    (104, 'Alice', 'Manager', 101, '2022-04-25', 6000, NULL, 20),
+    (105, 'Mike', 'Clerk', 104, '2022-05-30', 3500, NULL, 30),
+    (106, 'Eve', 'Analyst', 104, '2022-06-05', 4500, NULL, 10);
+
+-- Insert data into DEPT table
+INSERT INTO Dept (deptno, dname, location) VALUES
+    (10, 'Research', 'New York'),
+    (20, 'Development', 'Dallas'),
+    (30, 'Testing', 'Chicago');
+
+SELECT ename
+FROM Emp
+WHERE ename LIKE 'B%E';
+
+UPDATE Emp
+SET sal = 8000
+WHERE deptno = 10;
+
+SELECT *
+FROM Emp
+WHERE deptno IN (SELECT deptno FROM Dept WHERE location = 'Chicago');
+
+SELECT ename
+FROM Emp
+WHERE sal = (SELECT MAX(sal) FROM Emp);
+
+SELECT *
+FROM Emp
+WHERE job = 'Clerk' AND deptno = (SELECT deptno FROM Dept WHERE location = 'Dallas');
+
+SELECT ename, sal*12 AS annual_salary
+FROM Emp
+ORDER BY annual_salary DESC;
+
+SELECT ename
+FROM Emp
+WHERE sal > (SELECT AVG(sal) FROM Emp);
+
+DELETE FROM Emp
+WHERE deptno = (SELECT deptno FROM Dept WHERE location = 'New York');
+
+SELECT Dept.dname, COUNT(Emp.eno) as num_employees
+FROM Dept
+LEFT JOIN Emp ON Dept.deptno = Emp.deptno
+GROUP BY Dept.dname;
+
+11.
+-- Create the Car table
+CREATE TABLE Car (
+    CarNo VARCHAR(10) PRIMARY KEY,
+    model VARCHAR(50),
+    Year INTEGER,
+    color VARCHAR(20),
+    price INTEGER
+);
+
+-- Create the Owner table
+CREATE TABLE Owner (
+    OwnerID INTEGER PRIMARY KEY,
+    OwnerName VARCHAR(50),
+    Mobile INTEGER,
+    DrivingLicense VARCHAR(20)
+);
+
+-- Create the CarOwner table with foreign keys
+CREATE TABLE CarOwner (
+    OwnerID INTEGER,
+    CarNo VARCHAR(10),
+    FOREIGN KEY (OwnerID) REFERENCES Owner(OwnerID),
+    FOREIGN KEY (CarNo) REFERENCES Car(CarNo),
+    PRIMARY KEY (OwnerID, CarNo)
+);
+
+-- Insert data into Car table
+INSERT INTO Car (CarNo, model, Year, color, price) VALUES
+    ('CAR001', 'Sports Car', 2022, 'Red', 70000),
+    ('CAR002', 'SUV', 2020, 'Black', 60000),
+    ('CAR003', 'Sedan', 2021, 'Blue', 55000),
+    ('CAR004', 'Hatchback', 2022, 'White', 45000),
+    ('CAR005', 'Sports Car', 2019, 'Red', 80000);
+
+-- Insert data into Owner table
+INSERT INTO Owner (OwnerID, OwnerName, Mobile, DrivingLicense) VALUES
+    (101, 'Pentu Saheb', 9999999999, 'DL1234'),
+    (102, 'John Doe', 8888888888, 'DL5678'),
+    (103, 'Jane Smith', 7777777777, 'DL91011');
+
+-- Insert data into CarOwner table
+INSERT INTO CarOwner (OwnerID, CarNo) VALUES
+    (101, 'CAR001'),
+    (101, 'CAR002'),
+    (102, 'CAR003'),
+    (103, 'CAR004'),
+    (103, 'CAR005');
+
+SELECT o.OwnerName
+FROM Owner o
+JOIN CarOwner co ON o.OwnerID = co.OwnerID
+JOIN Car c ON co.CarNo = c.CarNo
+WHERE c.model = 'Sports Car';
+
+SELECT o.OwnerName
+FROM Owner o
+JOIN CarOwner co ON o.OwnerID = co.OwnerID
+JOIN Car c ON co.CarNo = c.CarNo
+WHERE c.price > 50000;
+
+SELECT c.model, c.price
+FROM Car c
+JOIN CarOwner co ON c.CarNo = co.CarNo
+JOIN Owner o ON co.OwnerID = o.OwnerID
+WHERE o.OwnerName = 'Pentu Saheb';
+
+SELECT DISTINCT o.OwnerName
+FROM Owner o
+JOIN CarOwner co ON o.OwnerID = co.OwnerID
+JOIN Car c ON co.CarNo = c.CarNo
+WHERE c.color = 'Red';
+
+SELECT o.DrivingLicense
+FROM Owner o
+JOIN CarOwner co ON o.OwnerID = co.OwnerID
+JOIN Car c ON co.CarNo = c.CarNo
+WHERE c.model = 'Sports Car';
+
+SELECT OwnerName
+FROM Owner
+WHERE OwnerName LIKE '%Reddy%';
+
+12:
+
+-- Create the Member table
+CREATE TABLE Member (
+    MemberID INT PRIMARY KEY,
+    MemberName VARCHAR(50),
+    Mobile BIGINT
+);
+
+-- Create the DVD table
+CREATE TABLE DVD (
+    DVDID INT PRIMARY KEY,
+    Title VARCHAR(100),
+    Category VARCHAR(50),
+    Cost INT
+);
+
+-- Create the DVDIssue table with foreign keys
+CREATE TABLE DVDIssue (
+    DVDID INT,
+    MemberID INT,
+    IssueDate DATE,
+    FOREIGN KEY (DVDID) REFERENCES DVD(DVDID),
+    FOREIGN KEY (MemberID) REFERENCES Member(MemberID),
+    PRIMARY KEY (DVDID, MemberID)
+);
+
+-- Insert data into Member table
+INSERT INTO Member (MemberID, MemberName, Mobile) VALUES
+    (101, 'John Doe', 9999999999),
+    (102, 'Jane Smith', 8888888888),
+    (103, 'Bob Johnson', 7777777777);
+
+-- Insert data into DVD table
+INSERT INTO DVD (DVDID, Title, Category, Cost) VALUES
+    (201, 'Action Movie 1', 'Action', 300),
+    (202, 'Love Story 1', 'Romance', 250),
+    (203, 'Action Movie 2', 'Action', 350),
+    (204, 'Horror Movie 1', 'Horror', 200);
+
+-- Insert data into DVDIssue table
+INSERT INTO DVDIssue (DVDID, MemberID, IssueDate) VALUES
+    (201, 101, '2022-01-15'),
+    (202, 102, '2022-02-20'),
+    (203, 103, '2022-03-25'),
+    (204, 101, '2022-04-30');
+
+SELECT Title
+FROM DVD
+WHERE Category = 'Action';
+
+SELECT m.MemberName
+FROM Member m
+JOIN DVDIssue di ON m.MemberID = di.MemberID
+JOIN DVD d ON di.DVDID = d.DVDID
+WHERE d.Category = 'Romance';
+
+SELECT Title
+FROM DVD
+WHERE CHAR_LENGTH(Title) >= 6 AND Category = 'Action';
+
+SELECT m.MemberName, COUNT(di.DVDID) AS Num_DVDs_Taken
+FROM Member m
+LEFT JOIN DVDIssue di ON m.MemberID = di.MemberID
+GROUP BY m.MemberName;
+
+SELECT Title
+FROM DVD
+WHERE Cost > 250;
+
+SELECT m.MemberName
+FROM Member m
+JOIN DVDIssue di ON m.MemberID = di.MemberID
+WHERE di.IssueDate > '2010-01-01';
+
+SELECT DISTINCT m.MemberName
+FROM Member m
+JOIN DVDIssue di ON m.MemberID = di.MemberID
+JOIN DVD d ON di.DVDID = d.DVDID
+WHERE d.Category = 'Horror';
+
+SELECT DISTINCT m.MemberName
+FROM Member m
+JOIN DVDIssue di ON m.MemberID = di.MemberID
+WHERE di.IssueDate > '2011-12-31';
+
+
